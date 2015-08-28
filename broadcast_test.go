@@ -86,3 +86,24 @@ func TestListenerClose(t *testing.T) {
 	b.Send(testStr)
 	wg.Wait()
 }
+
+func TestRegisterChan(t *testing.T) {
+	b, wg := setupN(func(i int, b *Broadcaster, wg *sync.WaitGroup) {
+		ch := make(chan interface{})
+		b.RegisterChan(ch)
+		wg.Done()
+		select {
+		case v := <-ch:
+			if v.(string) != testStr {
+				t.Error("bad value received")
+			}
+		case <-time.After(timeout):
+			t.Error("receive timed out")
+		}
+		wg.Done()
+	})
+	wg.Add(N)
+	b.Send(testStr)
+	wg.Wait()
+
+}

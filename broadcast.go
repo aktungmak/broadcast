@@ -98,6 +98,21 @@ func (b *Broadcaster) Listen() *Listener {
 	return &Listener{ch, b, b.nextId}
 }
 
+func (b *Broadcaster) RegisterChan(ch chan interface{}) {
+	b.m.Lock()
+	defer b.m.Unlock()
+	if b.listeners == nil {
+		b.listeners = make(map[int]chan<- interface{})
+	}
+	for b.listeners[b.nextId] != nil {
+		b.nextId++
+	}
+	if b.closed {
+		close(ch)
+	}
+	b.listeners[b.nextId] = ch
+}
+
 // Close closes the Listener, disabling the receival of further messages.
 func (l *Listener) Close() {
 	l.b.m.Lock()
